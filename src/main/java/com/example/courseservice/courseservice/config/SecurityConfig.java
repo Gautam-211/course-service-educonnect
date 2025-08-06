@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/courses/public/**").permitAll()
                         .requestMatchers("/api/courses/instructor/**").hasRole("INSTRUCTOR")
+                        .requestMatchers("/api/lectures/instructor/**").hasRole("INSTRUCTOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

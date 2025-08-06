@@ -8,9 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class LectureResponse {
-
     private Long id;
     private String title;
     private String videoUrl;
-    private String duration;
+    private int durationInMinutes;
 }
