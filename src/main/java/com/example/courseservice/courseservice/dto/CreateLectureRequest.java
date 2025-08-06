@@ -15,8 +15,9 @@ public class CreateLectureRequest {
     @NotBlank
     private String videoUrl;
 
-    @NotBlank
-    private String durationInMinutes;
+    @Positive(message = "Duration must be a positive number")
+    private int durationInMinutes;
+
 
     @NotNull
     private Long courseId;
