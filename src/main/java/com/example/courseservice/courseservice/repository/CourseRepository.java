@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
-    List<com.example.courseservice.courseservice.entity.Course> findByInstructorId(String instructorId);
+    List<Course> findByInstructorId(String instructorId);
 
     List<Course> findByIsPublishedTrue();
 

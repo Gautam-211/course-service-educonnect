@@ -25,6 +25,4 @@ public class CreateCourseRequest {
     @NotBlank
     private String thumbnailUrl;
 
-    @NotBlank
-    private String instructorId;
 }
