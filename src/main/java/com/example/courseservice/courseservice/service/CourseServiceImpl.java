@@ -103,6 +103,7 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
+    //check
     private Course getCourseOrThrow(Long id) {
         return courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));
