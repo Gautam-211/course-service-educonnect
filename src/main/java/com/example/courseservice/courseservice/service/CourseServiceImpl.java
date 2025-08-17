@@ -1,10 +1,9 @@
 package com.example.courseservice.courseservice.service;
 
-import com.example.courseservice.courseservice.dto.CourseResponse;
-import com.example.courseservice.courseservice.dto.CreateCourseRequest;
-import com.example.courseservice.courseservice.dto.UpdateCourseRequest;
+import com.example.courseservice.courseservice.dto.*;
 import com.example.courseservice.courseservice.entity.Course;
 import com.example.courseservice.courseservice.exception.ResourceNotFoundException;
+import com.example.courseservice.courseservice.kafka.KafkaProducerService;
 import com.example.courseservice.courseservice.repository.CourseRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     @Override
     public CourseResponse createCourse(CreateCourseRequest request) {
@@ -31,11 +31,28 @@ public class CourseServiceImpl implements CourseService {
                 .price(request.getPrice())
                 .thumbnailUrl(request.getThumbnailUrl())
                 .instructorId(instructorId)
-                .isPublished(false) // default unpublished
+                .isPublished(false)
                 .build();
 
         Course saved = courseRepository.save(course);
-        return mapToCourseResponse(saved);
+        CourseResponse response = mapToCourseResponse(saved);
+
+        // Build the notification request
+        CreateNotificationRequest notificationRequest = CreateNotificationRequest.builder()
+                .userId(instructorId)
+                .recipientEmail("gaminglytical2003@gmail.com")
+                .subject("Course Created Successfully")
+                .message("Your course '" + saved.getTitle() + "' has been created successfully.")
+                .type("EMAIL")
+                .build();
+
+        // Wrap inside event
+        CourseEvent event = new CourseEvent("COURSE_CREATED", notificationRequest);
+
+        // Send event
+        kafkaProducerService.sendMessage("course-events", event);
+
+        return response;
     }
 
     @Override
@@ -56,7 +73,25 @@ public class CourseServiceImpl implements CourseService {
     public CourseResponse changeCourseStatus(Long courseId, boolean isPublished) {
         Course course = getCourseOrThrow(courseId);
         course.setPublished(isPublished);
-        return mapToCourseResponse(courseRepository.save(course));
+        Course saved = courseRepository.save(course);
+        CourseResponse response = mapToCourseResponse(saved);
+
+        // Build the notification request
+        CreateNotificationRequest notificationRequest = CreateNotificationRequest.builder()
+                .userId(course.getInstructorId())
+                .recipientEmail("gaminglytical2003@gmail.com")
+                .subject("Course Created Successfully")
+                .message("Your course status has been changed to " + saved.isPublished())
+                .type("EMAIL")
+                .build();
+
+        // Wrap inside event
+        CourseEvent event = new CourseEvent("COURSE_STATUS_CHANGED", notificationRequest);
+
+        // Send event
+        kafkaProducerService.sendMessage("course-events", event);
+
+        return response;
     }
 
     @Override
@@ -75,7 +110,25 @@ public class CourseServiceImpl implements CourseService {
         course.setPrice(request.getPrice());
         course.setThumbnailUrl(request.getThumbnailUrl());
 
-        return mapToCourseResponse(courseRepository.save(course));
+        Course saved = courseRepository.save(course);
+        CourseResponse response = mapToCourseResponse(saved);
+
+        // Build the notification request
+        CreateNotificationRequest notificationRequest = CreateNotificationRequest.builder()
+                .userId(saved.getInstructorId())
+                .recipientEmail("gaminglytical2003@gmail.com")
+                .subject("Course Created Successfully")
+                .message("Your course has been updated : " + saved)
+                .type("EMAIL")
+                .build();
+
+        // Wrap inside event
+        CourseEvent event = new CourseEvent("COURSE_UPDATED", notificationRequest);
+
+        // Send event
+        kafkaProducerService.sendMessage("course-events", event);
+
+        return response;
     }
 
     @Override
@@ -84,6 +137,19 @@ public class CourseServiceImpl implements CourseService {
         validateOwnership(course.getInstructorId());
 
         courseRepository.delete(course);
+        CreateNotificationRequest notificationRequest = CreateNotificationRequest.builder()
+                .userId(course.getInstructorId())
+                .recipientEmail("gaminglytical2003@gmail.com")
+                .subject("Course deleted Successfully")
+                .message("Your course has been deleted : " + course)
+                .type("EMAIL")
+                .build();
+
+        // Wrap inside event
+        CourseEvent event = new CourseEvent("COURSE_DELETED", notificationRequest);
+
+        // Send event
+        kafkaProducerService.sendMessage("course-events", event);
     }
 
     // --------------------------
