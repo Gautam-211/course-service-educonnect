@@ -2,6 +2,7 @@ package com.example.courseservice.courseservice.dto;
 
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CourseResponse {
+public class CourseResponse implements Serializable {
     private Long id;
     private String title;
     private String description;

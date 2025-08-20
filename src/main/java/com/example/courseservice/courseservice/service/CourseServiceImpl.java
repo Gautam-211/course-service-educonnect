@@ -7,6 +7,8 @@ import com.example.courseservice.courseservice.kafka.KafkaProducerService;
 import com.example.courseservice.courseservice.repository.CourseRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -95,11 +97,16 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Cacheable(value = "courses", key = "#courseId")
     public CourseResponse getCourseById(Long courseId) {
+        System.out.println("**********************************************");
+        System.out.println("Fetching course data from DB with id : " + courseId);
+        System.out.println("**********************************************");
         return mapToCourseResponse(getCourseOrThrow(courseId));
     }
 
     @Override
+    @CacheEvict(value = "courses", key = "#courseId")
     public CourseResponse updateCourse(Long courseId, UpdateCourseRequest request) {
         Course course = getCourseOrThrow(courseId);
         validateOwnership(course.getInstructorId());
@@ -132,6 +139,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @CacheEvict(value = "courses", key = "#courseId")
     public void deleteCourse(Long courseId) {
         Course course = getCourseOrThrow(courseId);
         validateOwnership(course.getInstructorId());
