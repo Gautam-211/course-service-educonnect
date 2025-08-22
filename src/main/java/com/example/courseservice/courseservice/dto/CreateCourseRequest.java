@@ -13,10 +13,11 @@ public class CreateCourseRequest {
     private String title;
 
     @NotBlank
-    @Size(min = 20)
+    @Size(min = 20, max = 400)
     private String description;
 
     @NotBlank
+    @Size(min = 2, max = 100)
     private String category;
 
     @PositiveOrZero

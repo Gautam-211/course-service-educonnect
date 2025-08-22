@@ -2,6 +2,7 @@ package com.example.courseservice.courseservice.service;
 
 import com.example.courseservice.courseservice.dto.*;
 import com.example.courseservice.courseservice.entity.Course;
+import com.example.courseservice.courseservice.exception.AlreadyExistsException;
 import com.example.courseservice.courseservice.exception.ResourceNotFoundException;
 import com.example.courseservice.courseservice.kafka.KafkaProducerService;
 import com.example.courseservice.courseservice.repository.CourseRepository;
@@ -25,6 +26,10 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public CourseResponse createCourse(CreateCourseRequest request) {
         String instructorId = getCurrentInstructorId();
+
+        if(courseRepository.findByTitleIgnoreCase(request.getTitle()) != null){
+            throw new AlreadyExistsException("A course with title '" + request.getTitle() + "' already exists.");
+        }
 
         Course course = Course.builder()
                 .title(request.getTitle())
@@ -74,6 +79,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public CourseResponse changeCourseStatus(Long courseId, boolean isPublished) {
         Course course = getCourseOrThrow(courseId);
+        validateOwnership(course.getInstructorId());
+
         course.setPublished(isPublished);
         Course saved = courseRepository.save(course);
         CourseResponse response = mapToCourseResponse(saved);
