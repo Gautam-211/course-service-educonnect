@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/*/public/**").permitAll()
+                        .requestMatchers("/api/*/public/**", "/api/upload/**").permitAll()
                         .requestMatchers("/api/*/instructor/**").hasRole("INSTRUCTOR")
                         .requestMatchers("/api/*/student/**").hasRole("STUDENT")
                         .anyRequest().authenticated()

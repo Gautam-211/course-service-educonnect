@@ -24,6 +24,7 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final KafkaProducerService kafkaProducerService;
     private final UserClient userClient;
+    public final FileUploadService fileUploadService;
 
     @Override
     public CourseResponse createCourse(CreateCourseRequest request, String token) {
