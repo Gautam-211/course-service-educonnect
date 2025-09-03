@@ -38,14 +38,21 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getCoursesByInstructor(instructorId));
     }
 
+    @GetMapping("/public/{id}/exists")
+    public ResponseEntity<Boolean> courseExists(@PathVariable Long id) {
+        return ResponseEntity.ok(courseService.courseExists(id));
+    }
+
     // ===========================
     // Instructor Endpoints
     // ===========================
 
     @PostMapping("/instructor")
     @PreAuthorize("hasRole('INSTRUCTOR')")
-    public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CreateCourseRequest request) {
-        return ResponseEntity.ok(courseService.createCourse(request));
+    public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CreateCourseRequest request,
+                                                       @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+        return ResponseEntity.ok(courseService.createCourse(request, token));
     }
 
     @PutMapping("/instructor/{id}")

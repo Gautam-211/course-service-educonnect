@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CourseService {
 
-    CourseResponse createCourse(CreateCourseRequest request);
+    CourseResponse createCourse(CreateCourseRequest request, String token);
 
     List<CourseResponse> getAllCourses();
 
@@ -22,5 +22,7 @@ public interface CourseService {
     CourseResponse updateCourse(Long courseId, UpdateCourseRequest request);
 
     void deleteCourse(Long courseId);
+
+    boolean courseExists(Long courseId);
 }
 

@@ -1,5 +1,6 @@
 package com.example.courseservice.courseservice.service;
 
+import com.example.courseservice.courseservice.client.UserClient;
 import com.example.courseservice.courseservice.dto.*;
 import com.example.courseservice.courseservice.entity.Course;
 import com.example.courseservice.courseservice.exception.AlreadyExistsException;
@@ -22,9 +23,10 @@ public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
     private final KafkaProducerService kafkaProducerService;
+    private final UserClient userClient;
 
     @Override
-    public CourseResponse createCourse(CreateCourseRequest request) {
+    public CourseResponse createCourse(CreateCourseRequest request, String token) {
         String instructorId = getCurrentInstructorId();
 
         if(courseRepository.findByTitleIgnoreCase(request.getTitle()) != null){
@@ -44,6 +46,8 @@ public class CourseServiceImpl implements CourseService {
         Course saved = courseRepository.save(course);
         CourseResponse response = mapToCourseResponse(saved);
 
+        userClient.addCourseToInstructor(saved.getId(), Long.parseLong(instructorId), token);
+
         // Build the notification request
         CreateNotificationRequest notificationRequest = CreateNotificationRequest.builder()
                 .userId(instructorId)
@@ -55,7 +59,6 @@ public class CourseServiceImpl implements CourseService {
 
         // Wrap inside event
         CourseEvent event = new CourseEvent("COURSE_CREATED", notificationRequest);
-
         // Send event
         kafkaProducerService.sendMessage("course-events", event);
 
@@ -143,6 +146,11 @@ public class CourseServiceImpl implements CourseService {
         kafkaProducerService.sendMessage("course-events", event);
 
         return response;
+    }
+
+    @Override
+    public boolean courseExists(Long courseId) {
+        return courseRepository.existsById(courseId);
     }
 
     @Override
