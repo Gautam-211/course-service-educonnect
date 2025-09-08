@@ -8,6 +8,7 @@ import com.example.courseservice.courseservice.exception.ResourceNotFoundExcepti
 import com.example.courseservice.courseservice.repository.CourseRepository;
 import com.example.courseservice.courseservice.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -23,6 +25,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewResponse createReview(CreateReviewRequest request) {
+        log.info("Creating review for course ID: {}", request.getCourseId());
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + request.getCourseId()));
 
@@ -36,6 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review savedReview = reviewRepository.save(review);
 
+        log.info("Review created with ID: {}", savedReview.getId());
         return mapToResponse(savedReview);
     }
 
@@ -56,10 +60,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void deleteReview(Long reviewId) {
+        log.info("Deleting review with ID: {}", reviewId);
         if (!reviewRepository.existsById(reviewId)) {
             throw new ResourceNotFoundException("Review not found with id: " + reviewId);
         }
         reviewRepository.deleteById(reviewId);
+
+        log.info("Review with ID: {} deleted successfully", reviewId);
     }
 
     private ReviewResponse mapToResponse(Review review) {

@@ -9,6 +9,7 @@ import com.example.courseservice.courseservice.kafka.KafkaProducerService;
 import com.example.courseservice.courseservice.repository.CourseRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
@@ -28,6 +30,8 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseResponse createCourse(CreateCourseRequest request, String token) {
+        log.info("Creating course with title: {}", request.getTitle());
+
         String instructorId = getCurrentInstructorId();
 
         if(courseRepository.findByTitleIgnoreCase(request.getTitle()) != null){
@@ -63,6 +67,8 @@ public class CourseServiceImpl implements CourseService {
         // Send event
         kafkaProducerService.sendMessage("course-events", event);
 
+        log.info("Course created with ID: {}", saved.getId());
+
         return response;
     }
 
@@ -82,6 +88,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseResponse changeCourseStatus(Long courseId, boolean isPublished) {
+        log.info("Changing course status for courseId: {} to {}", courseId, isPublished);
         Course course = getCourseOrThrow(courseId);
         validateOwnership(course.getInstructorId());
 
@@ -104,6 +111,8 @@ public class CourseServiceImpl implements CourseService {
         // Send event
         kafkaProducerService.sendMessage("course-events", event);
 
+        log.info("Course status changed for courseId: {} to {}", courseId, isPublished);
+
         return response;
     }
 
@@ -119,6 +128,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @CacheEvict(value = "courses", key = "#courseId")
     public CourseResponse updateCourse(Long courseId, UpdateCourseRequest request) {
+        log.info("Updating course with ID: {}", courseId);
+
         Course course = getCourseOrThrow(courseId);
         validateOwnership(course.getInstructorId());
 
@@ -146,6 +157,8 @@ public class CourseServiceImpl implements CourseService {
         // Send event
         kafkaProducerService.sendMessage("course-events", event);
 
+        log.info("Course updated with ID: {}", courseId);
+
         return response;
     }
 
@@ -157,6 +170,7 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @CacheEvict(value = "courses", key = "#courseId")
     public void deleteCourse(Long courseId) {
+        log.info("Deleting course with ID: {}", courseId);
         Course course = getCourseOrThrow(courseId);
         validateOwnership(course.getInstructorId());
 
@@ -174,6 +188,8 @@ public class CourseServiceImpl implements CourseService {
 
         // Send event
         kafkaProducerService.sendMessage("course-events", event);
+
+        log.info("Course deleted with ID: {}", courseId);
     }
 
     // --------------------------
@@ -193,7 +209,6 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    //check
     private Course getCourseOrThrow(Long id) {
         return courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));

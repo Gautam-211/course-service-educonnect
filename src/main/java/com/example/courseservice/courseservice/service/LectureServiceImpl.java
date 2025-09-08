@@ -10,6 +10,7 @@ import com.example.courseservice.courseservice.repository.LectureRepository;
 import com.example.courseservice.courseservice.service.LectureService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LectureServiceImpl implements LectureService {
 
     private final LectureRepository lectureRepository;
@@ -24,6 +26,7 @@ public class LectureServiceImpl implements LectureService {
 
     @Override
     public LectureResponse createLecture(CreateLectureRequest request) {
+        log.info("Creating lecture with title: {}", request.getTitle());
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + request.getCourseId()));
 
@@ -35,6 +38,8 @@ public class LectureServiceImpl implements LectureService {
                 .build();
 
         Lecture savedLecture = lectureRepository.save(lecture);
+
+        log.info("Lecture created with ID: {}", savedLecture.getId());
 
         return mapToLectureResponse(savedLecture);
     }
@@ -49,10 +54,12 @@ public class LectureServiceImpl implements LectureService {
 
     @Override
     public void deleteLecture(Long lectureId) {
+        log.info("Deleting lecture with ID: {}", lectureId);
         if (!lectureRepository.existsById(lectureId)) {
             throw new ResourceNotFoundException("Lecture not found with ID: " + lectureId);
         }
         lectureRepository.deleteById(lectureId);
+        log.info("Lecture with ID: {} deleted successfully", lectureId);
     }
 
     @Override
